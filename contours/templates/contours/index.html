@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contour Detection App</title>
+</head>
+<body>
+<h1>Upload Image for Contour Detection</h1>
+<form id="imageForm" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" />
+    <button type="button" onclick="uploadImage()">Detect Contours</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    function uploadImage() {
+      const form = document.getElementById("imageForm");
+      const formData = new FormData(form);
+
+      fetch("/detect_contours/", {
+        method: "POST",
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        displayContours(data);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+    }
+
+    function displayContours(data) {
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      if ("error" in data) {
+        resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+      } else {
+        // Display the processed image
+        const imgElement = document.createElement("img");
+        imgElement.src = "data:image/png;base64," + data.image_data;
+        resultDiv.appendChild(imgElement);
+
+        // Display contour data
+        for (const key in data.contours) {
+          const points = data.contours[key];
+          resultDiv.innerHTML += `<p>Contour ${key}: ${JSON.stringify(points)}</p>`;
+        }
+      }
+    }
+</script>
+</body>
+</html>
