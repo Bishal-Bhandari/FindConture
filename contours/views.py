@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rembg import remove
 
+
 @csrf_exempt
 def detect_contours(request):
     if request.method == 'POST':
