@@ -6,9 +6,11 @@
     <title>Contour Detection App</title>
 </head>
 <body>
+
 <h1>Upload Image for Contour Detection</h1>
 <form id="imageForm" enctype="multipart/form-data">
     <input type="file" name="image" accept="image/*" />
+    <input type="text" id="numberInput" name="number" placeholder="Enter a number between 0-255" />
     <button type="button" onclick="uploadImage()">Detect Contours</button>
 </form>
 
