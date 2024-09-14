@@ -1,6 +1,6 @@
 # FindConture
-Input the image and get an outline of the image.
-The program will save the outline in the 2D array into a JSON file. 
+Input the image and get an outline of it.
+The program will show the outline in the 2D array in a JSON file. 
 
 Input image: 
 
