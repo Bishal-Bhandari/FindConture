@@ -4,36 +4,46 @@ import numpy as np
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rembg import remove
 
 
 @csrf_exempt
 def detect_contours(request):
     if request.method == 'POST':
         try:
-            image_file = request.FILES['image']  # Get the image from the request
-            img_fs = image_file.read()  # Read the image file into bytes
-            np_ary = np.frombuffer(img_fs, np.uint8)  # Convert to numpy array
+            # Extract the image and number from the request
+            image_file = request.FILES.get('image')
+            # getting number for threshold value into the cv threshold setting
+            number = request.POST.get('number')  # Get the number from the text box
+            if number:
+                try:
+                    threshold_value = int(number)  # Convert the number to an integer
+                except ValueError:
+                    return JsonResponse({'error': 'Invalid number format'}, status=400)
+            else:
+                return JsonResponse({'error': 'No number provided'}, status=400)
 
-            img = cv2.imdecode(np_ary, cv2.IMREAD_COLOR)  # Decode the image
+            if image_file:
+                img_fs = image_file.read()
+                np_ary = np.frombuffer(img_fs, np.uint8)
+                img = cv2.imdecode(np_ary, cv2.IMREAD_COLOR)
+                bnw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                gus_blr = cv2.GaussianBlur(bnw, (5, 5), 0)
 
-            bnw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
-            gus_blr = cv2.GaussianBlur(bnw, (5, 5), 0)  # Apply Gaussian blur
-            _, roi = cv2.threshold(gus_blr, 0, 255, cv2.THRESH_BINARY)  # Thresholding
+                # Use the dynamic threshold value
+                _, roi = cv2.threshold(gus_blr, threshold_value, 255, cv2.THRESH_BINARY)
 
-            contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # Find contours
+                contours, _ = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                contour_dict = {i + 1: contour.reshape(-1, 2).tolist() for i, contour in enumerate(contours)}
 
-            # Prepare contour data
-            contour_dict = {i + 1: contour.reshape(-1, 2).tolist() for i, contour in enumerate(contours)}
+                cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
 
-            # Draw contours on the image
-            cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
+                _, buffer = cv2.imencode('.png', img)
+                img_base64 = base64.b64encode(buffer).decode('utf-8')
 
-            # Convert the processed image to base64 for rendering in HTML
-            _, buffer = cv2.imencode('.png', img)
-            img_base64 = base64.b64encode(buffer).decode('utf-8')
-
-            return JsonResponse({'contours': contour_dict, 'image_data': img_base64}, status=200)
+                return JsonResponse({'contours': contour_dict, 'image_data': img_base64, 'number': threshold_value},
+                                    status=200)
+            else:
+                return JsonResponse({'error': 'No image file provided'}, status=400)
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -42,4 +52,4 @@ def detect_contours(request):
 
 
 def upload_page(request):
-    return render(request, 'contours/index.html')  # Render the HTML page
+    return render(request, 'index.html')
