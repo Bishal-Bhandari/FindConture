@@ -23,11 +23,13 @@ def detect_contours(request):
             else:
                 return JsonResponse({'error': 'No number provided'}, status=400)
 
+            # threshold_value = int(detect_background(image_file))
+
             if image_file:
                 img_fs = image_file.read()
                 np_ary = np.frombuffer(img_fs, np.uint8)
                 img = cv2.imdecode(np_ary, cv2.IMREAD_COLOR)
-
+                print('hello1')
                 bnw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 gus_blr = cv2.GaussianBlur(bnw, (5, 5), 0)
 
