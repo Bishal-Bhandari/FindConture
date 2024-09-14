@@ -4,7 +4,7 @@ import numpy as np
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .background_detection import detect_background
+
 
 @csrf_exempt
 def detect_contours(request):
@@ -12,7 +12,6 @@ def detect_contours(request):
         try:
             # Extract the image and number from the request
             image_file = request.FILES.get('image')
-
             # getting number for threshold value into the cv threshold setting
             number = request.POST.get('number')  # Get the number from the text box
             if number:
@@ -23,13 +22,10 @@ def detect_contours(request):
             else:
                 return JsonResponse({'error': 'No number provided'}, status=400)
 
-            # threshold_value = int(detect_background(image_file))
-
             if image_file:
                 img_fs = image_file.read()
                 np_ary = np.frombuffer(img_fs, np.uint8)
                 img = cv2.imdecode(np_ary, cv2.IMREAD_COLOR)
-                print('hello1')
                 bnw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 gus_blr = cv2.GaussianBlur(bnw, (5, 5), 0)
 
